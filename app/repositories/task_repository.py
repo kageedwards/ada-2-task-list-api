@@ -15,6 +15,9 @@ class TaskRepository(BaseRepository):
         except KeyError:
             return False
 
+        if not isinstance(completed_at, ( datetime, None ) ):
+            return False
+
         return {
             "title": title,
             "description": description,
