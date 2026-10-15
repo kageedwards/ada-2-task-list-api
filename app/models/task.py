@@ -8,3 +8,13 @@ class Task(db.Model):
     title: Mapped[str]
     description: Mapped[str]
     completed_at: Mapped[Optional[datetime]]
+
+    def to_dict(self):
+        dictionary = {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "is_complete": isinstance(self.completed_at, datetime)
+        }
+
+        return dictionary
