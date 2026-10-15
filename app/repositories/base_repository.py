@@ -52,3 +52,11 @@ class BaseRepository:
         self.session().commit()
 
         return new_item
+
+    def get_one_by_id(self, record_id):
+        # Allow the ValueError to raise if invalid
+        validated_id = int(record_id)
+
+        query = self.query().where(self.__MODEL.id == validated_id).limit(1)
+        
+        return self.session().execute(query).scalar_one_or_none()
