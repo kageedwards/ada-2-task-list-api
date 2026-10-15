@@ -24,3 +24,31 @@ class BaseRepository:
 
     def session(self) -> Session:
         return self.__db.session
+
+    def validate(record_data):
+        """
+        The validation function still needs to be overridden with model-specific attributes
+
+        It should return a dictionary of validated attributes and values
+        OR return False if the data is invalid.
+        """
+        return False
+
+    def create(self, record_data: dict):
+        """
+        This will work with the validation setup of the child class,
+        because we're now expanding the validated_data into the 
+        model constructor regardless of the specific attributes
+        the child repository class will be using.
+        """
+        validated_data = self.validate(record_data)
+        
+        if not validated_data:
+            return None
+
+        new_item = self.__MODEL(**validated_data)
+
+        self.session().add(new_item)
+        self.session().commit()
+
+        return new_item
