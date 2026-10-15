@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Select
+from sqlalchemy.orm import Session
 from ..models.base import Base as BaseModel
 
 class BaseRepository:
@@ -20,3 +21,6 @@ class BaseRepository:
 
     def query(self) -> Select:
         return self.__db.select(self.__MODEL)
+
+    def session(self) -> Session:
+        return self.__db.session
