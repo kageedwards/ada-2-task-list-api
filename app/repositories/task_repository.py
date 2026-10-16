@@ -7,7 +7,7 @@ class TaskRepository(BaseRepository):
     def __init__(self):
         super().__init__(db, Task)
 
-    def validate(record_data: dict):
+    def validate(self, record_data: dict):
         try:
             title = record_data["title"]
             description = record_data.get("description", "")
@@ -15,7 +15,7 @@ class TaskRepository(BaseRepository):
         except KeyError:
             return False
 
-        if not isinstance(completed_at, ( datetime, None ) ):
+        if completed_at is not None and not isinstance(completed_at, datetime):
             return False
 
         return {

@@ -25,7 +25,7 @@ class BaseRepository:
     def session(self) -> Session:
         return self.__db.session
 
-    def validate(record_data):
+    def validate(self, record_data):
         """
         The validation function still needs to be overridden with model-specific attributes
 

@@ -19,11 +19,17 @@ class Task(db.Model):
 
         return dictionary
 
-    def from_dict(self, record_data: dict):
-        """
-        I want to use the repository pattern, but from_dict() must be implemented like so
-        """
-        from ..repositories.task_repository import TaskRepository
-        repo = TaskRepository()
+    def from_dict(record_data: dict):
+        if record_data["is_complete"]:
+            completed_at = record_data.get("completed_at", None)
 
-        return repo.create(record_data)
+            if completed_at is not None and not isinstance(completed_at, datetime):
+                raise ValueError("The completed_at attribute is malformed")
+        else:
+            completed_at = None
+
+        return Task(
+            title=record_data["title"],
+            description=record_data["description"],
+            completed_at=completed_at
+        )
