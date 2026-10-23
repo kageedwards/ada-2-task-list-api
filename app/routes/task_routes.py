@@ -2,7 +2,14 @@ from datetime import datetime
 from flask import Blueprint, request, Response, make_response, abort
 from app.models.task import Task
 from ..db import db
-from .route_utilities import validate_model, create_model, update_model, get_models_with_filters, quiet_success_response
+from .route_utilities import (
+    validate_model, 
+    create_model, 
+    update_model, 
+    get_models_with_filters, 
+    quiet_success_response, 
+    send_slack_notification
+)
 
 tasks_bp = Blueprint("tasks_bp", __name__, url_prefix="/tasks")
 
@@ -43,7 +50,11 @@ def mark_task_as_complete(task_id):
 
     update = {"completed_at": datetime.now()}
 
-    return update_model(this_task, update)
+    result = update_model(this_task, update)
+
+    send_slack_notification("#task-notifications-c26", f"Someone just completed the task {this_task.title}")
+
+    return result
 
 @tasks_bp.patch("/<task_id>/mark_incomplete")
 def mark_task_as_incomplete(task_id):
