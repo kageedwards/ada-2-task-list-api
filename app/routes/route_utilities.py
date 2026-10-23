@@ -93,7 +93,7 @@ def update_model(model, updated_data):
                 abort(make_response(response, 400))
 
     db.session.commit()
-    return model.to_dict(), 204
+    return quiet_success_response()
 
 def get_models_with_filters(cls, filters=None):
     query = db.select(cls)
