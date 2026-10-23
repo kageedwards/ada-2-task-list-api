@@ -1,4 +1,6 @@
+import os
 import math
+import requests
 from flask import abort, make_response, Response
 from sqlalchemy import asc, desc, String, Integer, Float, Boolean, DateTime
 from ..db import db
@@ -113,3 +115,20 @@ def get_models_with_filters(cls, filters=None):
     models_response = [model.to_dict() for model in models]
 
     return models_response
+
+def send_slack_notification(channel, message):
+    endpoint = "https://slack.com/api/chat.postMessage"
+    token = os.environ.get("SLACKBOT_TOKEN", "")
+    
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    request_data = {
+        "channel": channel,
+        "text": message
+    }
+
+    response = requests.post(endpoint, json=request_data, headers=headers)
+
+    return response
