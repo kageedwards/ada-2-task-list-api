@@ -9,6 +9,10 @@ class Task(db.Model):
     description: Mapped[str]
     completed_at: Mapped[Optional[datetime]]
 
+    @classmethod
+    def sort_column(cls):
+        return "title"
+
     def to_dict(self):
         dictionary = {
             "id": self.id or None,

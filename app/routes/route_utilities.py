@@ -1,6 +1,6 @@
 import math
 from flask import abort, make_response, Response
-from sqlalchemy import desc, String, Integer, Float, Boolean, DateTime
+from sqlalchemy import asc, desc, String, Integer, Float, Boolean, DateTime
 from ..db import db
 from datetime import datetime
 from sqlalchemy import inspect
@@ -100,7 +100,13 @@ def get_models_with_filters(cls, filters=None):
 
     if filters and isinstance(filters, dict):
         for column, value in filters.items():
-            if hasattr(cls, column):
+            if column == "sort":
+                if value == "asc":
+                    query = query.order_by(asc(cls.sort_column()))
+                elif value == "desc":
+                    query = query.order_by(desc(cls.sort_column()))
+            
+            elif hasattr(cls, column):
                 query = query.where(getattr(cls, column).ilike(f"%{value}%"))
 
     models = db.session.scalars(query)
