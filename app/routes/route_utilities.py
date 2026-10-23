@@ -1,16 +1,21 @@
 import math
-from flask import abort, make_response
-from sqlalchemy import desc
+from flask import abort, make_response, Response
+from sqlalchemy import desc, String, Integer, Float, Boolean, DateTime
 from ..db import db
+from datetime import datetime
 from sqlalchemy import inspect
 
+def quiet_success_response():
+    return Response(status=204, mimetype="application/json")
 
 def validate_model(model, model_id):
     try:
         model_id = int(model_id)
     except (ValueError, TypeError):
+        response = {"details": "Invalid data"}
         abort(make_response(
-            {"message": f"{model.__name__.lower()} {model_id} invalid"},
+            response,
+            # {"message": f"{model.__name__.lower()} {model_id} invalid"},
             400
         ))
 
@@ -28,7 +33,8 @@ def create_model(cls, model_data):
     try:
         new_model = cls.from_dict(model_data)
     except KeyError as error:
-        response = {"message": f"Invalid request: missing {error.args[0]}"}
+        # response = {"message": f"Invalid request: missing {error.args[0]}"}
+        response = {"details": "Invalid data"}
         abort(make_response(response, 400))
     
     db.session.add(new_model)
@@ -39,13 +45,55 @@ def create_model(cls, model_data):
 def update_model(model, updated_data):
     attributes = [attr.key for attr in inspect(model.__class__).mapper.column_attrs]
 
+    model_mapper = inspect(model.__class__)
+    
     for attr in attributes:
         if attr in updated_data and attr != "id":
-            setattr(model, attr, updated_data[attr])
-    
-    db.session.commit()
+            column = model_mapper.columns[attr]
+            value = updated_data[attr]
 
-    return model.to_dict(), 200
+            try:
+                if value is None:
+                    if column.nullable:
+                        setattr(model, attr, None)
+                        continue
+                    raise ValueError
+
+                if isinstance(column.type, String):
+                    if not isinstance(value, str):
+                        raise ValueError
+                    data = str(value)
+
+                elif isinstance(column.type, Integer):
+                    data = int(value)
+
+                elif isinstance(column.type, Float):
+                    data = float(value)
+
+                elif isinstance(column.type, Boolean):
+                    if not isinstance(value, bool):
+                        raise ValueError
+                    data = bool(value)
+                    
+                elif isinstance(column.type, DateTime):
+                    if isinstance(value, str):
+                        data = datetime.fromisoformat(value)
+                    elif isinstance(value, datetime):
+                        data = value
+                    else:
+                        raise ValueError
+
+                else:
+                    raise ValueError
+
+                setattr(model, attr, data)
+            except ValueError:
+                response = {"message": f"Invalid request: datatype mismatch for {attr}"}
+                # response = {"details": "Invalid data"}
+                abort(make_response(response, 400))
+
+    db.session.commit()
+    return model.to_dict(), 204
 
 def get_models_with_filters(cls, filters=None):
     query = db.select(cls)
