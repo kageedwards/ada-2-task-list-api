@@ -19,16 +19,24 @@ class Task(db.Model):
 
         return dictionary
 
-    def from_dict(record_data: dict):
-        if record_data["is_complete"]:
-            completed_at = record_data.get("completed_at", None)
+    @classmethod
+    def from_dict(cls, record_data: dict):
+        completed_at = None
 
-            if completed_at is not None and not isinstance(completed_at, datetime):
+        if "completed_at" in record_data:
+            completed_at = record_data["completed_at"]
+
+            if not isinstance(completed_at, datetime):
                 raise ValueError("The completed_at attribute is malformed")
-        else:
-            completed_at = None
 
-        return Task(
+        elif "is_complete" in record_data:
+            if record_data["is_complete"] is False:
+                completed_at = None
+
+            elif request_body["is_complete"] is True:
+                completed_at = datetime.now()
+
+        return cls(
             title=record_data["title"],
             description=record_data["description"],
             completed_at=completed_at
