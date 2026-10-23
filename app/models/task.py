@@ -17,7 +17,7 @@ class Task(db.Model):
         dictionary = {
             "id": self.id or None,
             "title": self.title or None,
-            "description": self.description or None,
+            "description": self.description or "",
             "is_complete": isinstance(self.completed_at, datetime)
         }
 
