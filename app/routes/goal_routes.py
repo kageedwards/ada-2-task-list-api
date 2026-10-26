@@ -1,6 +1,8 @@
+from sqlalchemy import func
 from datetime import datetime
 from flask import Blueprint, request, Response, make_response, abort
 from app.models.goal import Goal
+from app.models.task import Task
 from ..db import db
 from .route_utilities import (
     validate_model, 
@@ -43,3 +45,49 @@ def delete_task(goal_id):
     db.session.commit()
 
     return quiet_success_response()
+
+@goals_bp.post("/<goal_id>/tasks")
+def post_task_ids_to_goal(goal_id):
+    goal = validate_model(Goal, goal_id)
+
+    request_body = request.get_json()
+
+    task_ids = request_body.get("task_ids", [])
+
+    try:
+        task_ids = [int(tid) for tid in task_ids]
+    except (ValueError, TypeError):
+        abort(make_response({"details": "Invalid data"}, 400))
+
+    task_ids_set = set(task_ids)
+
+    tasks_query = db.select(Task).where(
+        Task.id.in_(task_ids_set)
+    )
+
+    tasks = db.session.scalars(tasks_query).all()
+
+    goal.tasks = tasks
+
+    db.session.commit()
+
+    response = {
+        "id": goal.id,
+        "task_ids": [task.id for task in goal.tasks]
+    }
+
+    return response
+
+@goals_bp.get("/<goal_id>/tasks")
+def get_tasks_for_specific_goal(goal_id):
+    goal = validate_model(Goal, goal_id)
+
+    tasks = goal.tasks
+
+    response = {
+        "id": goal.id,
+        "title": goal.title,
+        "tasks": [task.to_dict() for task in goal.tasks]
+    }
+
+    return response

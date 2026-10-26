@@ -26,6 +26,9 @@ class Task(db.Model):
             "is_complete": isinstance(self.completed_at, datetime)
         }
 
+        if self.goal_id is not None:
+            dictionary["goal_id"] = self.goal_id
+
         return dictionary
 
     @classmethod
@@ -42,7 +45,7 @@ class Task(db.Model):
             if record_data["is_complete"] is False:
                 completed_at = None
 
-            elif request_body["is_complete"] is True:
+            elif record_data["is_complete"] is True:
                 completed_at = datetime.now()
 
         return cls(
