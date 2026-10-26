@@ -35,7 +35,7 @@ class Task(db.Model):
     def from_dict(cls, record_data: dict):
         completed_at = None
 
-        if "completed_at" in record_data:
+        if record_data.get(completed_at, None) is not None:
             completed_at = record_data["completed_at"]
 
             if not isinstance(completed_at, datetime):
